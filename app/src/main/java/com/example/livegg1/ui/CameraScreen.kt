@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+// ...existing imports
 import com.example.livegg1.Utils.cropBitmapToAspectRatio
 import com.example.livegg1.Utils.takePhoto
 import com.example.livegg1.ui.theme.LiveGG1Theme
@@ -74,6 +78,11 @@ fun CameraScreen(cameraExecutor: ExecutorService) {
     var speechService by remember { mutableStateOf<SpeechService?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorText by remember { mutableStateOf<String?>(null) }
+
+    // 进度条相关：显示距离下一次更新的剩余时间
+    val updateIntervalMs = 5000L // 每次更新间隔（毫秒），可根据需要调整为 6000L
+    var progress by remember { mutableStateOf(0f) } // 0f 开始，逐渐增长到 1f
+    var timeRemainingSec by remember { mutableStateOf(updateIntervalMs / 1000f) }
 
     // 新的状态管理：用于连续识别
     val recognizedSentences = remember { mutableStateListOf<String>() }
@@ -183,8 +192,19 @@ fun CameraScreen(cameraExecutor: ExecutorService) {
         takePhoto(imageCapture, cameraExecutor, { imageToShow = cropBitmapToAspectRatio(it, screenAspectRatio) }, {})
         delay(1000)
 
+        // 主循环：每 updateIntervalMs 拍照一次。内部按 100ms 步进更新进度和剩余时间。
+        val stepMs = 100L
         while (isActive) {
-            delay(6000L) // 每6秒更新一次背景
+            var elapsed = 0L
+            while (isActive && elapsed < updateIntervalMs) {
+                delay(stepMs)
+                elapsed += stepMs
+                val remaining = (updateIntervalMs - elapsed).coerceAtLeast(0L)
+                progress = (elapsed.toFloat() / updateIntervalMs.toFloat()).coerceIn(0f, 1f)
+                timeRemainingSec = remaining / 1000f
+            }
+
+            // 时间到，拍照并重置状态
             takePhoto(
                 imageCapture = imageCapture,
                 executor = cameraExecutor,
@@ -196,6 +216,10 @@ fun CameraScreen(cameraExecutor: ExecutorService) {
                 },
                 onError = { Log.e("MainLoop", "Photo capture failed", it) }
             )
+
+            // 拍照后马上重置进度（下一刻开始倒计时）
+            progress = 0f
+            timeRemainingSec = updateIntervalMs / 1000f
         }
     }
 
@@ -204,6 +228,8 @@ fun CameraScreen(cameraExecutor: ExecutorService) {
         isLoading = isLoading,
         imageToShow = imageToShow,
         captionToShow = captionToShow,
+        progress = progress,
+        timeRemainingSec = timeRemainingSec,
         previewView = { AndroidView({ previewView }, modifier = Modifier.fillMaxSize()) }
     )
 }
@@ -213,6 +239,8 @@ private fun CameraScreenContent(
     isLoading: Boolean,
     imageToShow: Bitmap?,
     captionToShow: String,
+    progress: Float,
+    timeRemainingSec: Float,
     previewView: @Composable () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -262,6 +290,29 @@ private fun CameraScreenContent(
                     )
             ) {}
 
+            // 进度条 + 倒计时（右下角，宽度为屏幕的 1/6）
+            val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
+            val progressWidth = (screenWidthDp / 8)
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 40.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+//                Text(
+//                    text = String.format("下次更新: %.1f s", timeRemainingSec),
+//                    color = Color.White,
+//                    modifier = Modifier.padding(bottom = 6.dp)
+//                )
+                // 进度条从左向右显示（直接使用 progress）
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier
+                        .width(progressWidth)
+                        .height(6.dp)
+                )
+            }
+
             // 字幕层
             if (captionToShow.isNotEmpty()) {
                 Column(
@@ -300,6 +351,8 @@ fun CameraScreenPreview() {
             isLoading = false,
             imageToShow = placeholderBitmap,
             captionToShow = "这是第一句已经识别完成的字幕。\n这是第二句，仍在识别中...",
+            progress = 0.5f,
+            timeRemainingSec = 2.5f,
             previewView = {
                 Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray))
             }
