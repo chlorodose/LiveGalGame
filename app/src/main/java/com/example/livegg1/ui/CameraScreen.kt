@@ -351,7 +351,7 @@ private fun CameraScreenContent(
                         topLeft = Offset(innerLeft, innerTop),
                         size = Size(innerW, innerH),
                         cornerRadius = androidx.compose.ui.geometry.CornerRadius(innerRadius.toPx(), innerRadius.toPx()),
-                        blendMode = BlendMode.Clear
+                        //blendMode = BlendMode.Clear
                     )
                 }
 
