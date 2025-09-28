@@ -34,12 +34,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+// CompositionLocalProvider / LocalMinimumTouchTargetEnforcement removed to avoid dependency on material
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -79,6 +82,7 @@ import androidx.camera.core.Preview as CameraPreview
 import androidx.core.content.ContextCompat
 import android.media.MediaPlayer
 import java.lang.IllegalStateException
+import com.example.livegg1.R
 
 @Composable
 fun CameraScreen(cameraExecutor: ExecutorService) {
@@ -417,23 +421,51 @@ private fun CameraScreenContent(
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .offset(x = -screenWidthDp / 5)
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
+                    .offset(x = -screenWidthDp / 12)
+                    .padding(bottom = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(-10.dp)
             ) {
-                val btnHeight = 16.dp
-                TextButton(onClick = { Log.d("CameraScreen", "Button 1 clicked") }, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(btnHeight)) {
-                    Text(text = "SAVE", fontSize = 12.sp, color = Color.White)
-                }
-                TextButton(onClick = { Log.d("CameraScreen", "Button 2 clicked") }, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(btnHeight)) {
-                    Text(text = "LOAD", fontSize = 12.sp, color = Color.White)
-                }
-                TextButton(onClick = { Log.d("CameraScreen", "Button 3 clicked") }, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(btnHeight)) {
-                    Text(text = "Q.SAVE", fontSize = 12.sp, color = Color.White)
-                }
-                TextButton(onClick = { Log.d("CameraScreen", "Button 4 clicked") }, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(btnHeight)) {
-                    Text(text = "Q.LOAD", fontSize = 12.sp, color = Color.White)
-                }
+                    val btnHeight = 16.dp
+                    TextButton(onClick = { Log.d("CameraScreen", "Button 1 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Text(text = "SAVE", fontSize = 12.sp, color = Color.White)
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "Button 2 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Text(text = "LOAD", fontSize = 12.sp, color = Color.White)
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "Button 3 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Text(text = "Q.SAVE", fontSize = 12.sp, color = Color.White)
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "Button 4 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Text(text = "Q.LOAD", fontSize = 12.sp, color = Color.White)
+                    }
+
+                    // SVG 图像按钮（image2.svg 对应的资源名假定为 R.drawable.image2）
+                    TextButton(onClick = { Log.d("CameraScreen", "Image button clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(
+                            painter = painterResource(id = R.drawable.image2),
+                            contentDescription = "image2",
+                            modifier = Modifier.width(18.dp).height(18.dp),
+                            colorFilter = ColorFilter.tint(Color.White)
+                        )
+                    }
+
+                    // 新增的图像按钮集合：image4, image5, image7, image8
+                    TextButton(onClick = { Log.d("CameraScreen", "image4 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(painter = painterResource(id = R.drawable.image4), contentDescription = "image4", modifier = Modifier.width(18.dp).height(18.dp), colorFilter = ColorFilter.tint(Color.White))
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "image5 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(painter = painterResource(id = R.drawable.image5), contentDescription = "image5", modifier = Modifier.width(18.dp).height(18.dp), colorFilter = ColorFilter.tint(Color.White))
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "image7 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(painter = painterResource(id = R.drawable.image7), contentDescription = "image7", modifier = Modifier.width(18.dp).height(18.dp), colorFilter = ColorFilter.tint(Color.White))
+                    }
+                    TextButton(onClick = { Log.d("CameraScreen", "image8 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(painter = painterResource(id = R.drawable.image8), contentDescription = "image8", modifier = Modifier.width(18.dp).height(18.dp), colorFilter = ColorFilter.tint(Color.White))
+                    }
+                    // 新增的图像按钮：image3, imag
+                    TextButton(onClick = { Log.d("CameraScreen", "image9 clicked") }, contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp), modifier = Modifier.height(btnHeight)) {
+                        Image(painter = painterResource(id = R.drawable.image9), contentDescription = "image9", modifier = Modifier.width(18.dp).height(18.dp), colorFilter = ColorFilter.tint(Color.White))
+                    }
             }
         }
     }
