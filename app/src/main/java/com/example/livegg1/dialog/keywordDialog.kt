@@ -1,29 +1,99 @@
 package com.example.livegg1.dialog
 
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun KeywordDialog(
 	onAccept: () -> Unit,
 	onReject: () -> Unit,
 	onDismiss: () -> Unit
 ) {
-	AlertDialog(
-		onDismissRequest = onDismiss,
-		title = { Text("检测到关键词") },
-		text = { Text("语音中出现了“吗”，请选择下一步操作。") },
-		confirmButton = {
-			TextButton(onClick = onAccept) {
-				Text("接受")
-			}
-		},
-		dismissButton = {
-			TextButton(onClick = onReject) {
-				Text("拒绝")
+	val dialogShape = RoundedCornerShape(16.dp)
+	val dialogPink = Color(0xCCFFC0CB)
+	val borderColor = Color(0xFFFF80AB)
+
+	BasicAlertDialog(onDismissRequest = onDismiss) {
+		Card(
+			modifier = Modifier.padding(24.dp),
+			shape = dialogShape,
+			colors = CardDefaults.cardColors(containerColor = dialogPink),
+			border = BorderStroke(2.dp, borderColor)
+		) {
+			Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+				Text(
+					text = "该做出选择了",
+					style = MaterialTheme.typography.titleLarge,
+					color = Color.White,
+					fontWeight = FontWeight.Bold
+				)
+				Text(
+					modifier = Modifier.padding(top = 12.dp),
+					text = "。。。",
+					style = MaterialTheme.typography.bodyMedium,
+					color = Color.White
+				)
+				Column(
+					modifier = Modifier
+						.padding(top = 24.dp)
+						.fillMaxWidth(),
+					verticalArrangement = Arrangement.spacedBy(12.dp)
+				) {
+					OutlinedButton(
+						modifier = Modifier.fillMaxWidth(),
+						onClick = onReject,
+						shape = dialogShape,
+						border = BorderStroke(2.dp, borderColor),
+						colors = ButtonDefaults.outlinedButtonColors(
+							containerColor = Color.White,
+							contentColor = borderColor
+						)
+					) {
+						Text("好啊好啊")
+					}
+					OutlinedButton(
+						modifier = Modifier.fillMaxWidth(),
+						onClick = onAccept,
+						shape = dialogShape,
+						border = BorderStroke(2.dp, borderColor),
+						colors = ButtonDefaults.outlinedButtonColors(
+							containerColor = Color.White,
+							contentColor = borderColor
+						)
+					) {
+						Text("不了")
+					}
+				}
 			}
 		}
+	}
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KeywordDialogPreview() {
+	KeywordDialog(
+		onAccept = {},
+		onReject = {},
+		onDismiss = {}
 	)
 }
