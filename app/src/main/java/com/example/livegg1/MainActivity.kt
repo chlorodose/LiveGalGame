@@ -11,12 +11,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.flow.collect
+import com.example.livegg1.dialog.KeywordDialog
+import com.example.livegg1.speech.KeywordSpeechListener
 import com.example.livegg1.ui.CameraScreen
 import com.example.livegg1.ui.theme.LiveGG1Theme
 import java.util.concurrent.ExecutorService
@@ -68,7 +78,53 @@ class MainActivity : ComponentActivity() {
             LiveGG1Theme {
                 val allPermissionsGranted = permissionsGranted.all { it.value }
                 if (allPermissionsGranted) {
+                    val context = LocalContext.current
+                    val lifecycleOwner = LocalLifecycleOwner.current
+                    val speechListener = remember { KeywordSpeechListener(context.applicationContext) }
+                    var showKeywordDialog by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(speechListener) {
+                        speechListener.keywordTriggers.collect {
+                            speechListener.stopListening()
+                            showKeywordDialog = true
+                        }
+                    }
+
+                    DisposableEffect(lifecycleOwner, speechListener) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            when (event) {
+                                Lifecycle.Event.ON_START -> speechListener.startListening()
+                                Lifecycle.Event.ON_STOP -> speechListener.stopListening()
+                                else -> Unit
+                            }
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose {
+                            lifecycleOwner.lifecycle.removeObserver(observer)
+                            speechListener.release()
+                        }
+                    }
+
                     CameraScreen(cameraExecutor)
+
+                    if (showKeywordDialog) {
+                        KeywordDialog(
+                            onAccept = {
+                                Log.d("MainActivity", "Keyword accepted")
+                                showKeywordDialog = false
+                                speechListener.startListening()
+                            },
+                            onReject = {
+                                Log.d("MainActivity", "Keyword rejected")
+                                showKeywordDialog = false
+                                speechListener.startListening()
+                            },
+                            onDismiss = {
+                                showKeywordDialog = false
+                                speechListener.startListening()
+                            }
+                        )
+                    }
                 } else {
                     Box(
                         modifier = Modifier.fillMaxSize(),
