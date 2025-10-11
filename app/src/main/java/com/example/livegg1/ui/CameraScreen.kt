@@ -102,11 +102,12 @@ fun CameraScreen(
     var imageToShow by remember { mutableStateOf<Bitmap?>(null) }
     var model by remember { mutableStateOf<Model?>(null) }
     var speechService by remember { mutableStateOf<SpeechService?>(null) }
+    var lastBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     // 进度条相关：显示距离下一次更新的剩余时间
-    val updateIntervalMs = 5000L // 每次更新间隔（毫秒），可根据需要调整为 6000L
+    val updateIntervalMs = 3500L // 每次更新间隔（毫秒），可根据需要调整为 6000L
     var progress by remember { mutableStateOf(0f) } // 0f 开始，逐渐增长到 1f
     var timeRemainingSec by remember { mutableStateOf(updateIntervalMs / 1000f) }
 
@@ -251,6 +252,18 @@ fun CameraScreen(
             speechService?.shutdown()
             model?.close()
             releasePlayer()
+            lastBitmap?.let {
+                if (!it.isRecycled) {
+                    it.recycle()
+                }
+            }
+            lastBitmap = null
+            imageToShow?.let {
+                if (!it.isRecycled) {
+                    it.recycle()
+                }
+            }
+            imageToShow = null
         }
     }
 
@@ -290,7 +303,12 @@ fun CameraScreen(
                 executor = cameraExecutor,
                 onImageCaptured = { newBitmap ->
                     val croppedBitmap = cropBitmapToAspectRatio(newBitmap, screenAspectRatio)
-                    imageToShow?.recycle() // 释放旧的 bitmap
+                    lastBitmap?.let { oldBitmap ->
+                        if (oldBitmap != croppedBitmap && !oldBitmap.isRecycled) {
+                            oldBitmap.recycle()
+                        }
+                    }
+                    lastBitmap = croppedBitmap
                     imageToShow = croppedBitmap
                     Log.d("MainLoop", "Background photo updated.")
                 },

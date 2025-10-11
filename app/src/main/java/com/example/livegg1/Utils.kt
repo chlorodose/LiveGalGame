@@ -3,6 +3,8 @@ package com.example.livegg1
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -35,6 +37,7 @@ object Utils {
         onImageCaptured: (Bitmap) -> Unit,
         onError: (ImageCaptureException) -> Unit
     ) {
+        val mainHandler = Handler(Looper.getMainLooper())
         imageCapture.takePicture(
             executor,
             object : ImageCapture.OnImageCapturedCallback() {
@@ -49,15 +52,16 @@ object Utils {
                     if (bitmap != null) {
                         val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
                         val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                        onImageCaptured(rotatedBitmap)
+                        mainHandler.post { onImageCaptured(rotatedBitmap) }
                     } else {
-                        onError(ImageCaptureException(ImageCapture.ERROR_UNKNOWN, "Failed to decode bitmap", null))
+                        val exception = ImageCaptureException(ImageCapture.ERROR_UNKNOWN, "Failed to decode bitmap", null)
+                        mainHandler.post { onError(exception) }
                     }
                 }
 
                 override fun onError(exception: ImageCaptureException) {
                     Log.e("takePhoto", "Photo capture error: ${exception.message}", exception)
-                    onError(exception)
+                    mainHandler.post { onError(exception) }
                 }
             }
         )
