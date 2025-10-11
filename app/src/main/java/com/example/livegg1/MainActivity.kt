@@ -107,7 +107,8 @@ class MainActivity : ComponentActivity() {
                         cameraExecutor = cameraExecutor,
                         onRecognizedText = { text, isFinal ->
                             speechListener.onRecognizedText(text, isFinal)
-                        }
+                        },
+                        isDialogVisible = showKeywordDialog
                     )
 
                     if (showKeywordDialog) {

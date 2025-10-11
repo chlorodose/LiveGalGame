@@ -89,7 +89,8 @@ import com.example.livegg1.R
 fun CameraScreen(
     cameraExecutor: ExecutorService,
     chapterTitle: String = "Chapter 1",
-    onRecognizedText: (text: String, isFinal: Boolean) -> Unit = { _, _ -> }
+    onRecognizedText: (text: String, isFinal: Boolean) -> Unit = { _, _ -> },
+    isDialogVisible: Boolean = false
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -124,6 +125,49 @@ fun CameraScreen(
     // --- 相机设置 ---
     val imageCapture = remember { ImageCapture.Builder().build() }
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }
+
+    // --- BGM 控制 ---
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var currentBgm by remember { mutableStateOf<String?>(null) }
+
+    fun releasePlayer() {
+        mediaPlayer?.let {
+            try {
+                it.stop()
+            } catch (_: IllegalStateException) {
+                // 忽略停止异常
+            }
+            it.release()
+        }
+        mediaPlayer = null
+        currentBgm = null
+    }
+
+    fun switchBgm(assetName: String) {
+        if (currentBgm == assetName) return
+        releasePlayer()
+        runCatching {
+            context.assets.openFd(assetName).use { afd ->
+                val player = MediaPlayer().apply {
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    isLooping = true
+                    prepare()
+                    start()
+                }
+                mediaPlayer = player
+                currentBgm = assetName
+                Log.d("CameraScreen", "BGM switched to $assetName")
+            }
+        }.onFailure { error ->
+            Log.w("CameraScreen", "Failed to play BGM $assetName: ${error.message}", error)
+            releasePlayer()
+        }
+    }
+
+    LaunchedEffect(isDialogVisible) {
+        val targetAsset = if (isDialogVisible) "TeaBreak.mp3" else "bgm.mp3"
+        switchBgm(targetAsset)
+    }
 
     // --- Vosk 监听器 (连续识别逻辑) ---
     val listener = object : RecognitionListener {
@@ -187,23 +231,6 @@ fun CameraScreen(
 
     // --- 核心逻辑：绑定相机和资源管理 ---
     DisposableEffect(lifecycleOwner) {
-        // BGM 播放器：尝试加载 assets/bgm.mp3 并循环播放
-        var mediaPlayer: MediaPlayer? = null
-        try {
-            val afd = context.assets.openFd("bgm.mp3")
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                isLooping = true
-                prepare()
-                start()
-            }
-            afd.close()
-            Log.d("CameraScreen", "BGM started from assets/bgm.mp3")
-        } catch (e: Exception) {
-            Log.w("CameraScreen", "Could not start BGM from assets/bgm.mp3: ${e.message}")
-            mediaPlayer?.release()
-            mediaPlayer = null
-        }
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
@@ -222,14 +249,13 @@ fun CameraScreen(
             speechService?.stop()
             speechService?.shutdown()
             model?.close()
-            // 释放 BGM 播放器
-            try {
-                mediaPlayer?.stop()
-            } catch (e: IllegalStateException) {
-                // 忽略停止时的状态异常
-            }
-            mediaPlayer?.release()
-            mediaPlayer = null
+            releasePlayer()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            releasePlayer()
         }
     }
 
