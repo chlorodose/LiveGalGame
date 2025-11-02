@@ -409,9 +409,13 @@ private fun CameraScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .offset(y = heartOffsetY)
+                    .zIndex(1f)
             )
             Spacer(modifier = Modifier.height(4.dp))
-            AffectionBar(affectionLevel = affectionLevel)
+            AffectionBar(
+                affectionLevel = affectionLevel,
+                modifier = Modifier.zIndex(0f)
+            )
         }
 
         // 左上角章节标签背景
