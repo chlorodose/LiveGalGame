@@ -17,4 +17,39 @@ APP在[tag](https://github.com/JStone2934/LiveGalGame/tags)中可以直接下载
 
 CSDN下载链接：https://download.csdn.net/download/qq_63533710/92237453
 
+## 本地构建指南
+
+1) 前提条件
+
+- JDK：17+
+
+- Android SDK：36+
+
+- Gradle：仓库内包含 `gradlew.bat` 与 gradle wrapper（Gradle 8.13），无需系统级安装 Gradle，使用仓库自带 wrapper 即可。
+
+2) 常用构建命令（在项目根目录，PowerShell）
+
+- 查看 Gradle wrapper 版本：
+
+	.\\gradlew.bat --version
+
+- 构建 Debug APK：
+
+	.\\gradlew.bat assembleDebug
+
+- 构建 Release APK（注意：若没有 `signing.properties` 则生成非签名的 release 包）：
+
+	.\\gradlew.bat assembleRelease
+
+3) 签名
+
+项目 `app/build.gradle.kts` 会在根目录查找 `signing.properties`（若存在则读取签名信息）。如果你要生成已签名的 release 包，创建一个 `signing.properties` 文件放在项目根，例如：
+
+	keystore.path=release.keystore
+	keystore.password=your_store_password
+	key.alias=your_key_alias
+	key.password=your_key_password
+
+并把 `release.keystore` 放在合适位置（与 `signing.properties` 中 path 对应）。请妥善保管密钥与密码。
+
 ## 欢迎自由开发，有活你就直接往里加
