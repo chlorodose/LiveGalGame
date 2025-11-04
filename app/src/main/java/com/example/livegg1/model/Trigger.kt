@@ -12,5 +12,7 @@ enum class DialogType {
 data class KeywordTrigger(
     val id: String = UUID.randomUUID().toString(), // 使用UUID确保唯一性
     val keyword: String,
-    val dialogType: DialogType
+    val dialogType: DialogType,
+    val primaryOptionText: String = "好啊好啊",
+    val secondaryOptionText: String = "不了"
 )

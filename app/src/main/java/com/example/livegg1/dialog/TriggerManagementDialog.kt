@@ -1,7 +1,6 @@
 package com.example.livegg1.dialog
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,7 +24,7 @@ import com.example.livegg1.model.KeywordTrigger
 @Composable
 fun TriggerManagementDialog(
     triggers: List<KeywordTrigger>,
-    onAddTrigger: (keyword: String, dialogType: DialogType) -> Unit,
+    onAddTrigger: (keyword: String, dialogType: DialogType, primaryOptionText: String, secondaryOptionText: String) -> Unit,
     onUpdateTrigger: (original: KeywordTrigger, updated: KeywordTrigger) -> Unit,
     onDeleteTrigger: (trigger: KeywordTrigger) -> Unit,
     onDismiss: () -> Unit
@@ -90,12 +89,20 @@ fun TriggerManagementDialog(
         AddOrEditTriggerDialog(
             trigger = showAddOrEditDialog,
             isEditing = isEditing,
-            onConfirm = { keyword, dialogType ->
+            onConfirm = { keyword, dialogType, primaryOptionText, secondaryOptionText ->
                 if (isEditing) {
                     val original = showAddOrEditDialog!!
-                    onUpdateTrigger(original, original.copy(keyword = keyword, dialogType = dialogType))
+                    onUpdateTrigger(
+                        original,
+                        original.copy(
+                            keyword = keyword,
+                            dialogType = dialogType,
+                            primaryOptionText = primaryOptionText,
+                            secondaryOptionText = secondaryOptionText
+                        )
+                    )
                 } else {
-                    onAddTrigger(keyword, dialogType)
+                    onAddTrigger(keyword, dialogType, primaryOptionText, secondaryOptionText)
                 }
                 showAddOrEditDialog = null
             },
@@ -125,6 +132,18 @@ private fun TriggerItem(
             Column {
                 Text(text = "关键词: \"${trigger.keyword}\"", fontWeight = FontWeight.SemiBold)
                 Text(text = "触发弹窗: ${trigger.dialogType.name}", style = MaterialTheme.typography.bodySmall)
+                if (trigger.dialogType == DialogType.CHOICE_DIALOG) {
+                    Text(
+                        text = "选项1: \"${trigger.primaryOptionText}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "选项2: \"${trigger.secondaryOptionText}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Row {
                 IconButton(onClick = { onEdit(trigger) }) {
@@ -143,12 +162,16 @@ private fun TriggerItem(
 private fun AddOrEditTriggerDialog(
     trigger: KeywordTrigger?,
     isEditing: Boolean,
-    onConfirm: (keyword: String, dialogType: DialogType) -> Unit,
+    onConfirm: (keyword: String, dialogType: DialogType, primaryOptionText: String, secondaryOptionText: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var keyword by remember { mutableStateOf(trigger?.keyword ?: "") }
     var dialogType by remember { mutableStateOf(trigger?.dialogType ?: DialogType.CHOICE_DIALOG) }
+    var primaryOption by remember { mutableStateOf(trigger?.primaryOptionText ?: "好啊好啊") }
+    var secondaryOption by remember { mutableStateOf(trigger?.secondaryOptionText ?: "不了") }
     var keywordError by remember { mutableStateOf(false) }
+    var primaryOptionError by remember { mutableStateOf(false) }
+    var secondaryOptionError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -159,7 +182,9 @@ private fun AddOrEditTriggerDialog(
                     value = keyword,
                     onValueChange = {
                         keyword = it
-                        keywordError = it.isBlank()
+                        if (keywordError) {
+                            keywordError = it.isBlank()
+                        }
                     },
                     label = { Text("关键词") },
                     isError = keywordError,
@@ -167,7 +192,11 @@ private fun AddOrEditTriggerDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (keywordError) {
-                    Text("关键词不能为空", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "关键词不能为空",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -179,7 +208,13 @@ private fun AddOrEditTriggerDialog(
                     DialogType.values().forEach { type ->
                         val isSelected = dialogType == type
                         Button(
-                            onClick = { dialogType = type },
+                            onClick = {
+                                dialogType = type
+                                if (type != DialogType.CHOICE_DIALOG) {
+                                    primaryOptionError = false
+                                    secondaryOptionError = false
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
                             )
@@ -188,15 +223,82 @@ private fun AddOrEditTriggerDialog(
                         }
                     }
                 }
+
+                if (dialogType == DialogType.CHOICE_DIALOG) {
+                    Spacer(Modifier.height(16.dp))
+                    Text("自定义选项内容:", modifier = Modifier.padding(bottom = 8.dp))
+
+                    OutlinedTextField(
+                        value = primaryOption,
+                        onValueChange = {
+                            primaryOption = it
+                            if (primaryOptionError) {
+                                primaryOptionError = it.isBlank()
+                            }
+                        },
+                        label = { Text("选项1 文本") },
+                        isError = primaryOptionError,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (primaryOptionError) {
+                        Text(
+                            "选项内容不能为空",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = secondaryOption,
+                        onValueChange = {
+                            secondaryOption = it
+                            if (secondaryOptionError) {
+                                secondaryOptionError = it.isBlank()
+                            }
+                        },
+                        label = { Text("选项2 文本") },
+                        isError = secondaryOptionError,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (secondaryOptionError) {
+                        Text(
+                            "选项内容不能为空",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (keyword.isNotBlank()) {
-                        onConfirm(keyword, dialogType)
+                    val sanitizedKeyword = keyword.trim()
+                    val sanitizedPrimary = primaryOption.trim()
+                    val sanitizedSecondary = secondaryOption.trim()
+
+                    keywordError = sanitizedKeyword.isEmpty()
+                    val requiresOptions = dialogType == DialogType.CHOICE_DIALOG
+                    if (requiresOptions) {
+                        primaryOptionError = sanitizedPrimary.isEmpty()
+                        secondaryOptionError = sanitizedSecondary.isEmpty()
                     } else {
-                        keywordError = true
+                        primaryOptionError = false
+                        secondaryOptionError = false
+                    }
+
+                    val optionsValid = !requiresOptions || (!primaryOptionError && !secondaryOptionError)
+                    if (!keywordError && optionsValid) {
+                        onConfirm(
+                            sanitizedKeyword,
+                            dialogType,
+                            sanitizedPrimary.ifEmpty { primaryOption },
+                            sanitizedSecondary.ifEmpty { secondaryOption }
+                        )
                     }
                 }
             ) {

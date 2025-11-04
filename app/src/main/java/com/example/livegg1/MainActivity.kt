@@ -158,42 +158,46 @@ class MainActivity : ComponentActivity() {
                     )
 
                     if (showKeywordDialog) {
-                        KeywordDialog(
-                            onAccept = {
-                                Log.d("MainActivity", "Keyword accepted: ${activeTrigger?.keyword}")
-                                idleBgmAsset = "Ah.mp3"
-                                queueAffectionChange(-0.4f)
-                                showKeywordDialog = false
-                                activeTrigger = null
-                                if (!showTriggerDialog) {
-                                    restartListeningIfPossible()
-                                }
-                            },
-                            onReject = {
-                                Log.d("MainActivity", "Keyword rejected: ${activeTrigger?.keyword}")
-                                idleBgmAsset = "casual.mp3"
-                                queueAffectionChange(0.4f)
-                                showKeywordDialog = false
-                                activeTrigger = null
-                                if (!showTriggerDialog) {
-                                    restartListeningIfPossible()
-                                }
-                            },
-                            onDismiss = {
-                                showKeywordDialog = false
-                                activeTrigger = null
-                                if (!showTriggerDialog) {
-                                    restartListeningIfPossible()
-                                }
-                            },
-                            onSelectBgm = { asset -> idleBgmAsset = asset }
-                        )
+                        activeTrigger?.let { trigger ->
+                            KeywordDialog(
+                                primaryOptionLabel = trigger.primaryOptionText,
+                                secondaryOptionLabel = trigger.secondaryOptionText,
+                                onPrimarySelected = {
+                                    Log.d("MainActivity", "Keyword rejected: ${trigger.keyword}")
+                                    idleBgmAsset = "casual.mp3"
+                                    queueAffectionChange(0.4f)
+                                    showKeywordDialog = false
+                                    activeTrigger = null
+                                    if (!showTriggerDialog) {
+                                        restartListeningIfPossible()
+                                    }
+                                },
+                                onSecondarySelected = {
+                                    Log.d("MainActivity", "Keyword accepted: ${trigger.keyword}")
+                                    idleBgmAsset = "Ah.mp3"
+                                    queueAffectionChange(-0.4f)
+                                    showKeywordDialog = false
+                                    activeTrigger = null
+                                    if (!showTriggerDialog) {
+                                        restartListeningIfPossible()
+                                    }
+                                },
+                                onDismiss = {
+                                    showKeywordDialog = false
+                                    activeTrigger = null
+                                    if (!showTriggerDialog) {
+                                        restartListeningIfPossible()
+                                    }
+                                },
+                                onSelectBgm = { asset -> idleBgmAsset = asset }
+                            )
+                        }
                     }
 
                     if (showTriggerDialog) {
                         TriggerManagementDialog(
                             triggers = triggers,
-                            onAddTrigger = { keyword, dialogType ->
+                            onAddTrigger = { keyword, dialogType, primaryOptionText, secondaryOptionText ->
                                 val cleaned = keyword.trim()
                                 val duplicate = triggers.any { it.keyword.equals(cleaned, ignoreCase = true) }
                                 if (cleaned.isEmpty()) {
@@ -201,7 +205,12 @@ class MainActivity : ComponentActivity() {
                                 } else if (duplicate) {
                                     Log.w("MainActivity", "Keyword already exists: $cleaned")
                                 } else {
-                                    val newTrigger = KeywordTrigger(keyword = cleaned, dialogType = dialogType)
+                                    val newTrigger = KeywordTrigger(
+                                        keyword = cleaned,
+                                        dialogType = dialogType,
+                                        primaryOptionText = primaryOptionText.trim().ifEmpty { primaryOptionText },
+                                        secondaryOptionText = secondaryOptionText.trim().ifEmpty { secondaryOptionText }
+                                    )
                                     Log.d("MainActivity", "Keyword added: ${newTrigger.keyword}")
                                     triggers = triggers + newTrigger
                                 }
@@ -216,7 +225,11 @@ class MainActivity : ComponentActivity() {
                                 } else if (duplicate) {
                                     Log.w("MainActivity", "Keyword already exists: $cleaned")
                                 } else {
-                                    val sanitized = updated.copy(keyword = cleaned)
+                                    val sanitized = updated.copy(
+                                        keyword = cleaned,
+                                        primaryOptionText = updated.primaryOptionText.trim().ifEmpty { updated.primaryOptionText },
+                                        secondaryOptionText = updated.secondaryOptionText.trim().ifEmpty { updated.secondaryOptionText }
+                                    )
                                     Log.d("MainActivity", "Keyword updated: ${sanitized.keyword}")
                                     triggers = triggers.map { existing ->
                                         if (existing.id == original.id) sanitized else existing

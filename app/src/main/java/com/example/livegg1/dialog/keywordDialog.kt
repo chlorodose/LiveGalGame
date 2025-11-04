@@ -24,8 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun KeywordDialog(
-	onAccept: () -> Unit,
-	onReject: () -> Unit,
+	primaryOptionLabel: String,
+	secondaryOptionLabel: String,
+	onPrimarySelected: () -> Unit,
+	onSecondarySelected: () -> Unit,
 	onDismiss: () -> Unit,
 	onSelectBgm: (String) -> Unit
 ) {
@@ -62,7 +64,7 @@ fun KeywordDialog(
 					OutlinedButton(
 						modifier = Modifier.fillMaxWidth(),
 						onClick = {
-							onReject()
+							onPrimarySelected()
 							onSelectBgm("casual.mp3")
 						},
 						shape = dialogShape,
@@ -72,12 +74,12 @@ fun KeywordDialog(
 							contentColor = borderColor
 						)
 					) {
-						Text("好啊好啊")
+						Text(primaryOptionLabel)
 					}
 					OutlinedButton(
 						modifier = Modifier.fillMaxWidth(),
 						onClick = {
-							onAccept()
+							onSecondarySelected()
 							onSelectBgm("Ah.mp3")
 						},
 						shape = dialogShape,
@@ -87,7 +89,7 @@ fun KeywordDialog(
 							contentColor = borderColor
 						)
 					) {
-						Text("不了")
+						Text(secondaryOptionLabel)
 					}
 				}
 			}
@@ -99,8 +101,10 @@ fun KeywordDialog(
 @Composable
 private fun KeywordDialogPreview() {
 	KeywordDialog(
-		onAccept = {},
-		onReject = {},
+		primaryOptionLabel = "好啊好啊",
+		secondaryOptionLabel = "不了",
+		onPrimarySelected = {},
+		onSecondarySelected = {},
 		onDismiss = {},
 		onSelectBgm = {}
 	)
