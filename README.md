@@ -19,12 +19,16 @@ APP在[tag](https://github.com/JStone2934/LiveGalGame/tags)中可以直接下载
 - 点击快进可以调整CG效果画面的更新速度
 - 点击跳过可以把画面更新切换成实时的
 
+### B站视频:[【-修复了GalGame玩家和女生聊天没有字幕的Bug-】](https://www.bilibili.com/video/BV15Q1jBQEzq/?share_source=copy_web&vd_source=181e7acfd50ad37dbfacd601ca302c13)
 <img width="2533" height="1427" alt="image" src="https://github.com/user-attachments/assets/65dd6c6f-bf47-4bc0-9695-034c7faa290d" />
 
 
 现在的软件在[tag](https://github.com/JStone2934/LiveGalGame/tags)下，功能更完整的版本会后续发布
 
 CSDN下载链接：https://download.csdn.net/download/qq_63533710/92237453
+
+网盘链接：通过网盘分享的文件：LiveGG
+链接: https://pan.baidu.com/s/1Bpt2DZNvjzT6BpKr8RyG-A?pwd=94g6 提取码: 94g6 
 
 ## 本地构建指南
 
